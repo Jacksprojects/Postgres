@@ -30,6 +30,8 @@ Alternatively, you can connect to psql from the terminal then use the `\c <Datab
 
 Use `\dt` to see all tables within a database.
 
+# Basics
+
 ## Creating databases
 
 `CREATE DATABASE <DatabaseName>`
@@ -92,7 +94,17 @@ Lets add 1000 new people using the site 'Mockaroo'. First specify the names of t
 
 To run instructions from a file in the psql console, use the `\i` command followed by the location of the file which is this case was `\i /home/jack/Downloads/person.sql`. 
 
-## Queries
+# Basic Queries
+
+## Basic verbs
+
+* **SELECT**
+* **WHERE**
+* **ORDER BY**
+* **DISTINCT**
+* **LIMIT**
+
+## Getting started
 
 To return **all columns** from a table use the command:
 `SELECT * FROM person;`
@@ -127,12 +139,38 @@ If you want to do this starting from row 5 for example, you can specify this usi
 `WHERE GENDER = 'Male'` 
 `OFFSET 5 LIMIT 10;`
 
+## Queries with multiple conditions
 
+* Multiple conditions can be specified after **AND** statements, just gotta wrap 'em with `()`
 
+`SELECT * FROM person`
+`WHERE gender = 'FEMALE' AND *(date_of_birth > '1980-01-01' OR date_of_birth < '1955-01-01')*`
+`ORDER BY date_of_birth;`
 
+* To speed up writing **OR** statements if you have multiple conditons, you want to avoid repetition like this:
 
+`SELECT * FROM person`
+`WHERE country_of_birth = 'China' OR country_of_birth = 'Brazil' OR country_of_birth = 'France'`
+`ORDER BY country_of_birth, date_of_birth;`
 
+* Instead, use the **IN** keyword, which takes an array of values:
 
+`SELECT * FROM person`
+`WHERE country_of_birth **IN ('China', 'Brazil', 'France')**`
+`ORDER BY country_of_birth, date_of_birth;`
+
+## Limit, Offset and Fetch
+
+`SELECT * FROM person`
+`FETCH FIRST 10 ROWS ONLY;`
+
+## Between
+
+* The **BETWEEN** keyword allows you to filter out rows by specifying a start and an end:
+
+`SELECT * FROM person`
+`WHERE date_of_birth **BETWEEN '1950-01-01' AND '1955-01-01'**`
+`ORDER BY date_of_birth;`
 
 
 
