@@ -9,6 +9,10 @@ Then launch postgres using the `psql` command in the terminal.
 
 To start off, change the password of this user by running the SQL command `ALTER USER postgres WITH PASSWORD 'passwordGoesHere';`
 
+## Viewing databases
+
+Use `\l` to list all available databases.
+
 ## Connecting to a database though the terminal
 
 To connect to a database from the terminal, make sure that you're the user "postgres" then run the following:
@@ -22,6 +26,10 @@ and the last argument is obviously the name of the database.
 
 Alternatively, you can connect to psql from the terminal then use the `\c <DatabaseName>` command to connect directly to the database.
 
+## Viewing tables within a database
+
+Use `\dt` to see all tables within a database.
+
 ## Creating databases
 
 `CREATE DATABASE <DatabaseName>`
@@ -29,7 +37,6 @@ Alternatively, you can connect to psql from the terminal then use the `\c <Datab
 ## Removing databases
 
 `DROP DATABASE <DatabaseName>`
-
 
 ## Adding tables to a database
 
@@ -61,6 +68,14 @@ Ah whoops, looks like I entered the table without the `gender` variable, lets se
 
 `ALTER TABLE person`
 `ADD COLUMN gender VARCHAR(6) NOT NULL;`
+
+
+## Descriptions of tables
+
+To see the column names and their data types you can use the following query:
+
+`SELECT column_name, data_type FROM information_schema.columns`
+`WHERE table_name = '<Table_name>';`
 
 ## Inserting records into tables
 
