@@ -156,7 +156,7 @@ If you want to do this starting from row 5 for example, you can specify this usi
 * Instead, use the **IN** keyword, which takes an array of values:
 
 `SELECT * FROM person`
-`WHERE country_of_birth **IN ('China', 'Brazil', 'France')**`
+`WHERE country_of_birth IN ('China', 'Brazil', 'France')`
 `ORDER BY country_of_birth, date_of_birth;`
 
 ## Limit, Offset and Fetch
@@ -169,15 +169,44 @@ If you want to do this starting from row 5 for example, you can specify this usi
 * The **BETWEEN** keyword allows you to filter out rows by specifying a start and an end:
 
 `SELECT * FROM person`
-`WHERE date_of_birth **BETWEEN '1950-01-01' AND '1955-01-01'**`
+`WHERE date_of_birth BETWEEN '1950-01-01' AND '1955-01-01'`
 `ORDER BY date_of_birth;`
 
+## LIKE and ILIKE
+
+* `LIKE` and `ILIKE` can be used for pattern matching for returning values that match certain contions, pretty much like regular expressions:
+* The `LIKE` keyword is also **case sensitive**, whereas **ILIKE** is not.
+
+`SELECT * FROM person`
+`WHERE email LIKE '%mozilla%';`
+
+* The query above will return any results that contain the characters **mozilla**. The wildcard `%` means that there can be anything infront or behind the string.
+* The `_` underscore character means that the query will have to match single characters, for example to get all of the three letter names from the database:
+
+`SELECT first_name FROM person`
+`WHERE first_name LIKE '___'`
+`ORDER BY first_name;`
 
 
+## GROUP BY
+
+* The `GROUP BY` condition is used in conjunction with an **Aggregate function** to return sets of values. The following query will return a list of countries and the number of people from the database who come from those countries. This works by calling the **COUNT(*)** function: 
+
+`SELECT country_of_birth, COUNT(*) FROM person`
+`GROUP BY country_of_birth`
+`ORDER BY COUNT(*) DESC;`
 
 
+## HAVING
 
+* This is used to add additional filters after making an aggregation. For example, with the query above, we aggregate by counting the number of results for each country in the table. Using the `HAVING` keyword, we can then filter the aggregated results using more conditions:
 
+`SELECT country_of_birth, COUNT(*) FROM person`
+`GROUP BY country_of_birth`
+`HAVING COUNT(*) > 20`
+`ORDER BY COUNT(*) DESC;`
+
+# MAX, MIN and SUM
 
 
 
