@@ -9,9 +9,19 @@ Then launch postgres using the `psql` command in the terminal.
 
 To start off, change the password of this user by running the SQL command `ALTER USER postgres WITH PASSWORD 'passwordGoesHere';`
 
+# Listing Contents
+
 ## Viewing databases
 
 Use `\l` to list all available databases.
+
+## Viewing tables within a database
+
+After connecting to a database, use `\dt` to see all available tables.
+
+##  Viewing descriptions of tables
+
+After connecting to a database, use `\d <TableName>` to see a description of a specific table
 
 ## Connecting to a database though the terminal
 
@@ -19,16 +29,12 @@ To connect to a database from the terminal, make sure that you're the user "post
 
 `psql -h localhost -p 5432 -U postgres <DatabaseName>` Then you'll be promted for the password for the user 'postgres'.
 
-`-h` Stands for "host"
-`-p` Stands for "port" - the default value is 5432
-`-U` Stands for "user" 
-and the last argument is obviously the name of the database.
+`-h` Stands for "host"</br>
+`-p` Stands for "port" - the default value is 5432</br>
+`-U` Stands for "user"</br> 
+The last argument is obviously the name of the database.
 
 Alternatively, you can connect to psql from the terminal then use the `\c <DatabaseName>` command to connect directly to the database.
-
-## Viewing tables within a database
-
-Use `\dt` to see all tables within a database.
 
 # Basics
 
@@ -93,6 +99,29 @@ The basic syntax for adding records into tables follows this formula:
 Lets add 1000 new people using the site 'Mockaroo'. First specify the names of the columns you want and how many entries you want generated, then save the file as .sql
 
 To run instructions from a file in the psql console, use the `\i` command followed by the location of the file which is this case was `\i /home/jack/Downloads/person.sql`. 
+
+## Deleting records
+
+* Normally you'll want to delete specific records, however you can also delete entries based on conditional logic using the `WHERE` kw. To delete a specific element you use the `DELETE` kw:
+
+`DELETE FROM <TableName> WHERE id = <id>;`
+
+## Updating records
+
+* The  `UPDATE` kw allows us to update a record based on one or more columns. 
+
+`UPDATE <TableName> SET <Column> = <Value>`</br>
+`WHERE <PrimaryKey> = <Value>;`
+
+* In our table there is somone called `Augusto` who has a `NULL` email. You can update his record by using `UPDATE`, specifying the columns we want to update using `SET`, then specifying that we're updting only his record by selecting his primary key with `WHERE`:
+
+`UPDATE person SET email = 'augusto42@gmail.com'`</br>
+`WHERE id = 234;`
+
+* To do this with multiple columns, just specify more of them and separate them with a comma:
+
+`UPDATE person SET email = 'felicia1992@hotmail.com', country_of_birth = 'Scotland'`</br>
+`WHERE id = 235;`
 
 # Basic Queries
 
@@ -198,6 +227,12 @@ If you want to do this starting from row 5 for example, you can specify this usi
 `GROUP BY country_of_birth`</br>
 `ORDER BY COUNT(*) DESC;`</br>
 
+* Combining `GROUP BY` with `DISTINCT` can be a useful query. Here's an example:
+
+`SELECT make, COUNT(DISTINCT model) AS n_models FROM car` </br>
+`GROUP BY make` </br>
+`ORDER BY n_models DESC;`
+
 
 ## HAVING
 
@@ -245,6 +280,18 @@ This works, but it returns all of our results under the column name `round` whic
 
 `SELECT *, ROUND(price * 0.5, 2) AS half_price FROM car;`
 
+# How to save queries!
+
+* It's great to be able to see queries interactively but it's pretty pointless unless you're looking for something specific, so how do we actually save queries as something useful like a `.csv` file?
+* The `COPY()` keyword allows us to do this, just wrap your query inside `COPY()` and specify a file type and a file location:
+
+`COPY (`</br>
+    `SELECT person.first_name, person.last_name, person.country_of_birth, car.make, car.model, car.price`</br>
+    `FROM person`</br>
+    `JOIN car ON person.car_id=car.id`</br>
+`) TO '/home/jack/Documents/CodeStuff/SQL/Postgres/ExampleQuery.csv'`</br>
+`WITH CSV HEADER;`
+
 # COALESCE and NULLIF
 
 The `COALESCE` keyword takes unlimited arguments and will return the first argument that is not `NULL`.  
@@ -259,4 +306,152 @@ This behaves similarly to `NULLIF` which will return a `NULL` as log as the argu
 
 SELECT *, NULLIF(country_of_birth, 'China') AS null_if_china FROM person;
 
-# Working with Dates
+
+# Working with Timestmps and Dates
+
+* The `NOW()` kw will give us the current timestamp in date-time y-m-d h-m-s + TZ format with the resolution of `microseconds`.
+* To get only the `date` from this timestamp, you can `cast` this as a date by using the `::` operator, so to get the current date yo ucan use:
+
+`SELECT NOW():: DATE;`
+
+**Note**: Look up the timestamp and date/time datatypes.
+
+## Adding and Sutracting with Dates
+
+* The `INERVAL` kw to calculate time intervals, for example:
+
+`SELECT NOW() - INTERVAL '1 YEAR';` </br>
+
+`SELECT NOW() + INTERVAL '14 MONTHS';` </br>
+
+`SELECT NOW() - INTERVAL '1233 DAYS';`
+
+* To be able to `cast` the timestamp to a date using `INTERVAL`, you'll need to wrap the call to `SELECT` in brakets:
+
+`SELECT (NOW() + INTERVAL '164 DAYS'):: DATE;`
+
+## Extracting Fields
+
+* The `EXTRACT` kw to extract certain fields from the timestamp such as the day, month or year:
+
+`SELECT EXTRACT (YEAR FROM NOW());` </br>
+
+## The AGE function
+
+* The `AGE` kw can be used to convert a date to an age.
+* This keyword takes two arguments which define the age based on a period of time: `AGE(To, From)`
+* For example in the person table, if we wanted to calculate the age of an employee, we would specify `AGE(NOW(), date_of_birth)` or `AGE(NOW()::DATE, date_of_birth)`:
+
+`SELECT first_name, last_name, AGE(date_of_birth) AS age FROM person` </br>
+`ORDER BY age DESC` </br>
+`LIMIT 20;` </br>
+
+# Primary Keys
+
+## Adding a Primary Key
+
+* Use `ALTER TABLE person ADD PRIMARY KEY (id);` to add a primary key to a table.
+
+## Filtering by Primary Key
+
+* Use `WHERE id` to filter results based on the primary key.
+
+`SELECT * FROM person`</br>
+`WHERE id = 3;`
+
+## Unique constraints
+
+* Additional constraints can be added to the table by specifying them using `ADD CONSTRAINT`.
+* To add a constraint that forces all email addresses to be unique, we could use the following:
+
+`ALTER TABLE person ADD CONTRAINT unique_email_address UNIQUE(email);`
+
+* Another example of a constraint could be if you want to limit the possible values that a variable can take, for example if you're working with binary gender information, you might want to enforce a constraint where the value fo gender could ould be male or female.
+* You could do this with the `person` table by enforcing the following using the `CHECK` kw:
+  
+`ALTER TABLE person ADD CONSTRAINT gender_constraint CHECK (gender = 'FEMALE' OR gender = 'MALE');`
+
+* To view all of the constraints applied to a table, you can use `\dt+ <TableName>`.
+
+# Creating UUIDs
+
+* To create a universally unique identifier (`uuid`) to use a primary instead of a `bigserial`, we can use the extension built into Postgres. To enable the extension use:
+
+`CREATE EXTENSION 'uuid-ossp';`</br>
+
+* To see an example of one of these `uuid`s, use:
+
+`SELECT uuid_generate_v4();`
+
+# On Conflict, Do Nothing
+
+* To avoid conflicts and errors, especialy when doing table inserts, you can make use of the `ON CONFLICT()` and `DO NOTHING` kws.
+* For this to work, you will need to either specify a `primary key` or an otherwise `unique` column.
+* If you try to make a table insert where the primary key is already taken, you can add an extra line to prevent throwing errors:
+
+`INSERT INTO person (id, first_name, last_name, gender, email, date_of_birth, country_of_birth)` </br>
+`VALUES (235, 'Felicia', 'Stranio', 'FEMALE', DATE '1976-10-03', 'felicia1991@hotmail.com', 'Scotland')` </br>
+`ON CONFLICT (id) DO NOTHING;`
+
+# Upsert
+
+* This allows you to override existing data if there are any conflicts present. **Not too sure why you would use this and not just `UPDATE` but ok...**
+* Take the exmaple above, imagine if she just registered all of her information but a few seconds later she wanted to changer her email address? Instead of `DO NOTHING` when there is a conflict on `id`, we can update the email instead using `UPDATE SET email = EXCLUDED.email;`:
+
+
+`INSERT INTO person (id, first_name, last_name, gender, email, date_of_birth, country_of_birth)` </br>
+`VALUES (235, 'Felicia', 'Stranio', 'FEMALE', DATE '1976-10-03', 'felicia1991@gmail.com', 'Scotland')` </br>
+`ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;`
+
+# Foreign Keys, Joins and Relationships
+
+* First of all, a `foreign key` is a key that references a `primary key` in another table.
+* Let's create a new sql file called `person-car` that contains the code to create two tables. The `CREATE TABLE` code in this file will be almost identical but we'll add foreign keys to our `person` table:
+
+```
+create table car (
+	id BIGSERIAL NOT NULL PRIMARY KEY,
+	make VARCHAR(100) NOT NULL,
+	model VARCHAR(100) NOT NULL,
+	price NUMERIC(19,2) NOT NULL
+);
+
+create table person (
+	id BIGSERIAL NOT NULL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	gender VARCHAR(7) NOT NULL,
+	email VARCHAR(100) NOT NULL,
+	date_of_birth DATE NOT NULL,
+	country_of_birth VARCHAR(50) NOT NULL,
+    car_id BIGINT REFERENCES car (id),
+    UNIQUE(car_id)
+);
+```
+
+* OK, so now that the tables exist and we've added data to them, let's assign a car to `Bradford`:
+
+`UPDATE person SET car_id = 2 WHERE id = 2;`
+
+## Inner joins
+
+* An inner join aims to bind two tables `A` and `B`, the result will return all of the data in the intersection of the two like a venn diagram `A+B = C`. Lets start by doing an inner join between our two tables `person` and `car`. In this case, our foreign key `car_id` in the `person` table links to the primary key `id` in the `car` table.
+* This is done using the `JOIN` and `ON` kws. The correct syntax is :
+
+`SELECT * FROM <TableA>`</br>
+`JOIN <TableB> ON <TableA>.ForeignKey = <TableB>.PrimaryKey;`
+
+* So for our table join we would do:
+
+`SELECT * FROM person`</br>
+`JOIN car ON person.car_id = car.id;`
+
+* This isn't super useful as we don't get to choose the information that we want returned, so lets make it more flexible:
+
+`SELECT person.first_name, person.last_name, person.country_of_birth`</br>
+`FROM person`</br>
+`JOIN car ON person.car_id = car.id;`
+
+## Left Joins
+
+*  A left join aims to bind two tables `A` and `B`, the result will return all of the data in the intersection of the two like a venn diagram `AND` all of the information in `A+B = C`.
