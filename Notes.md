@@ -280,10 +280,14 @@ This works, but it returns all of our results under the column name `round` whic
 
 `SELECT *, ROUND(price * 0.5, 2) AS half_price FROM car;`
 
-# How to save queries!
+# How to export results as CSV
 
 * It's great to be able to see queries interactively but it's pretty pointless unless you're looking for something specific, so how do we actually save queries as something useful like a `.csv` file?
 * The `COPY()` keyword allows us to do this, just wrap your query inside `COPY()` and specify a file type and a file location:
+
+
+
+
 
 `COPY (`</br>
     `SELECT person.first_name, person.last_name, person.country_of_birth, car.make, car.model, car.price`</br>
@@ -435,7 +439,8 @@ create table person (
 
 ## Inner joins
 
-* An inner join aims to bind two tables `A` and `B`, the result will return all of the data in the intersection of the two like a venn diagram `A+B = C`. Lets start by doing an inner join between our two tables `person` and `car`. In this case, our foreign key `car_id` in the `person` table links to the primary key `id` in the `car` table.
+* An inner join aims to bind two tables `A` and `B`, the result will return all of the data in the intersection of the two like a venn diagram `A+B = C`. This means that with an inner join, the only results that will be returned, are those that have foreign keys. In the example of joining `car` on `person`, the only results that are returned, are those with a `car_id`.
+* Lets start by doing an inner join between our two tables `person` and `car`. In this case, our foreign key `car_id` in the `person` table links to the primary key `id` in the `car` table.
 * This is done using the `JOIN` and `ON` kws. The correct syntax is :
 
 `SELECT * FROM <TableA>`</br>
@@ -448,10 +453,70 @@ create table person (
 
 * This isn't super useful as we don't get to choose the information that we want returned, so lets make it more flexible:
 
-`SELECT person.first_name, person.last_name, person.country_of_birth`</br>
+`SELECT first_name, last_name, country_of_birth, car.make, car.price`</br>
 `FROM person`</br>
 `JOIN car ON person.car_id = car.id;`
 
 ## Left Joins
 
-*  A left join aims to bind two tables `A` and `B`, the result will return all of the data in the intersection of the two like a venn diagram `AND` all of the information in `A+B = C`.
+*  So, in the last query where we returned `*` from `person` and joined `car` on `person.car_id`, we were able to get `all` of the information about them while excluding everyone who didn't have a car. Well in this case, we can get all of this information `while including` people who `don't` have a car.
+* The syntax for this is identical as the last query except we add the kw `LEFT`:
+
+`SELECT * FROM person` </br>
+`LEFT JOIN car ON person.car_id = car.id;`
+
+* This can also be used to return only the results who do not have cars for example:
+
+`SELECT * FROM person` </br>
+`LEFT JOIN car ON person.car_id = car.id;` </br>
+`WHERE car.* IS NULL;`
+
+# Extensions
+
+* PostgreSQL is designed to be easily extensible and includes a load of additional functions that can give your databases more functionality such as the ability to generate `uuid`s.
+* To view all of the available extensions use the `SELECT * FROM pg_a`
+
+# UUIDs as primary keys
+
+* `uuid`s are never the same and are therefor perfect for primary keys. On top of security concerns, these make it so that you can combine data from different databases without having clashes based on having conflicting `BIGSERIAL` id types.
+* To convert our previous database to use UUIDs instead of BIGSERIAL we have to make a few changes: 
+  * Firstly we have to add a new column to our `VALUES` to specify our ids and change the column name of our ids to `person_uid` and `car_uid` whereas we did not have to specify this before.
+  * We have to invoke the `uuid_generate_v4()` function to create the new UUID each time data is inserted.
+  * We have to change the datatypes from `BIGSERIAL` to `UUID`
+  * We also have to change the way that we refernce the `car_uid`
+
+
+
+```
+create table car (
+	car_uid UUID NOT NULL PRIMARY KEY,
+	make VARCHAR(100) NOT NULL,
+	model VARCHAR(100) NOT NULL,
+	price NUMERIC(19,2) NOT NULL
+);
+
+create table person (
+	person_uid UUID NOT NULL PRIMARY KEY,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	gender VARCHAR(20) NOT NULL,
+	email VARCHAR(100) NOT NULL,
+	date_of_birth DATE NOT NULL,
+	country_of_birth VARCHAR(50) NOT NULL,
+    car_uid UUID REFERENCES car(car_uid),
+    UNIQUE(car_uid),
+	UNIQUE(email)
+);
+
+insert into person (person_uid, first_name, last_name, gender, email, date_of_birth, country_of_birth) values (uuid_generate_v4(), 'Chrisy', 'Heistermann', 'Genderfluid', 'cheistermann0@last.fm', '1938/08/21', 'Cuba');
+
+insert into person (person_uid, first_name, last_name, gender, email, date_of_birth, country_of_birth) values (uuid_generate_v4(), 'Bradford', 'Dearnly', 'Genderqueer', 'bdearnly1@xinhuanet.com', '1969/07/19', 'Russia');
+
+insert into person (person_uid, first_name, last_name, gender, email, date_of_birth, country_of_birth) values (uuid_generate_v4(), 'Kalina', 'Fransson', 'Genderfluid', 'kfransson2@who.int', '1961/06/28', 'Sweden');
+
+
+insert into car (car_uid, make, model, price) values (uuid_generate_v4(), 'Mitsubishi', 'Starion', '98737.48');
+
+insert into car (car_uid, make, model, price) values (uuid_generate_v4(), 'Ford', 'LTD', '29127.55');
+```
+
