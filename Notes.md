@@ -520,3 +520,84 @@ insert into car (car_uid, make, model, price) values (uuid_generate_v4(), 'Mitsu
 insert into car (car_uid, make, model, price) values (uuid_generate_v4(), 'Ford', 'LTD', '29127.55');
 ```
 
+# Window Functions
+
+* The best way to understand window functions is to review `aggregate functions`. The following example calculates the average price of all of the products in the `products` table:
+
+`SELECT AVG(price) FROM products;`</br>
+
+* To apply this function to subsets of rows, you use the `GROUP BY` clause. The following example will return the average price for each group of products.
+
+`SELECT group_name, AVG(price) FROM products`</br>
+`INNER JOIN product_groups USING (group_id)`</br>
+`GROUP BY group_name;`
+
+* The `AVG()` function clearly reduces the number of rows returned by the query in both examples. The term `window` describes the set of rows on which the window function operates. A window function returns values from the rows inside the window.
+* The following query returns the product name, the price, product group and avaerage prices of each product group.
+
+`SELECT product_name, price, group_name, AVG(price) OVER(PARTITON BY group_name)`</br>
+`FROM products`</br>
+`INNER JOIN product_groups USING(group_id);`
+
+* In this case, the `AVG()` function works as a `window function` that operates on a set of rows defined by the `OVER` clause. Each set of rows is called a `window`.
+* The new syntax for this query is the `OVER` clause:
+  
+`AVG(price) OVER (PARTITION BY group_name)`
+
+* In this syntax, the `PARTITION BY` clause distributes the rows of the result set into groups and the `AVG()` function is applied to each group to return the average price for each
+
+## Window function syntax
+
+* PostgreSQL has a sophisticaed syntax for window function calls. The following illustrates the simplified version:
+
+```
+window_function(arg1, arg2, arg3...) OVER (
+	[PARTITION BY partition expression]
+	[ORDER BY sort_expresison [ASC | DESC] [NULLS {FIRST | LAST}]]
+)
+```
+
+* The `PARTITION BY` clause is optional and divides rows into `multiple groups` or partitions to which the window function is applied. Like the example above, we used the product group to divide the products into groups (or parititons).
+* The `frame_clause` defines a subset of rows in the current partition to wihch the window function is applied. Tis subset of rows is called a `frame`.
+* If you use multiple window functions in a query:
+
+`SELECT`</br>
+`wf1() OVER(PARTITION BY c1 ORDER BY c2),`</br>
+`wf1() OVER(PARTITION BY c1 ORDER BY c2),`</br>
+`FORM table_name;`
+
+* You can use the `WINDOW` clause the shorten this query:
+
+`SELECT` </br>
+`wf1() OVER w1` </br>
+`wf2() OVER w2` </br>`
+`FROM table_name`
+`WINDOW w AS (PARTITION BY c1 ORDER BY c2);`
+
+* You can also use the `WINDOW` clause even if you only have one window function in your query:
+
+`SELECT wf1() OVER w1` </br>
+`FROM table_name` </br>
+`WINDOW w AS (PARTITION BY c1 ORDER BY c2);`
+
+# The ROW_NUMBER(), RANK() and DENSE_RANK functions
+
+* These three functions assign an integer to each row based on its order in its result set.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
