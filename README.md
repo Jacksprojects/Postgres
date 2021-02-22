@@ -1,6 +1,6 @@
 # Postgres tutorial
 
-> This is more about using postgres through the terminal than actually about postgres it's self
+> Getting comfortable using postgres at the terminal, follows from blog post https://jacksprojects.netlify.app/posts/2021-02-22-postgresql-at-the-terminal/
 
 ## Objectives
 
